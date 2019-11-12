@@ -47,40 +47,77 @@ void merge(int* arr, int n, int left, int right, int len){
     delete [] tmp;
 }
 
+void merge_block(int* arr, int n, int k){
+    int last = 0;
+    for (int step = 2; step <= k; step *= 2) {  // for step elements inside block (step-block)
+        
+        for (int ind = 0; ind <= k && ind < n; ind += step) {  //  get step-block and merge
+            merge(arr, n, ind, ind + step / 2, step);
+            last = ind;
+        }
+    }
+    merge(arr, n, 0, last, k); // merge rest elements of k-block
+}
 
 int main(int argc, const char * argv[]) {
 
     int k, n;
     std::cin >> n >> k;
     
-    int arr[n];
-    for (int i = 0; i < n; i++){
-        std::cin >> arr[i];
+    int len1 = std::min(n, k);
+    int* first = new int [len1];
+    for (int i = 0; i < len1; i++){
+        std::cin >> first[i];
     }
+    merge_block(first, len1, k);
     
-// merge blocks per k elements
-    int last = 0;
-    for (int j = 0; j < n; j += k) { // for k-element blocks (k-block)
-        last = j;
-        for (int step = 2; step <= k; step *= 2) {  // for step elements inside block (step-block)
-            
-            for (int ind = j; ind <= j + k && ind < n; ind += step) {  //  get step-block and merge
-                merge(arr, n, ind, ind + step / 2, step);
-                last = ind;
-            }
+    while (n > 0){
+    
+        n -= len1;
+        int len2 = std::min(n, k);
+        int* second = new int [len2];
+        for (int i = 0; i < len2; i++){
+            std::cin >> second[i];
         }
-        merge(arr, n, j, last, k); // merge rest elements of k-block
+        merge_block(second, len2, k);
+        
+        int len = len1 + len2;
+        int* total = new int [len];
+        for (int i = 0; i < len1; i++){
+            total[i] = first[i];
+        }
+        for (int i = len1; i < len; i++){
+            total[i] = second[i-len1];
+        }
+        
+        merge(total, len, 0, len1, 2*k);
+        for (int j = 0; j < len1; j++) {
+            std::cout << total[j] << " ";
+        }
+        
+        delete [] first;
+        
+        
+        first = new int [len2];
+        for (int j = len1; j < len; j++) {
+            first[j-len1] = total[j];
+        }
+        len1 = len2;
+        
+        delete [] total;
     }
     
-
+    delete [] first;
+    std::cout << "\n";
 // merge neighbour k-blocks (all of them are sorted but it may be need to merge them pair-by-pair)
-    for (int i = 0; i < n; i += k){
-        merge(arr, n, i, i + k, 2*k);
-    }
+//    for (int i = 0; i < n; i += k){
+//        merge(arr, n, i, i + k, 2*k);
+//    }
     
-    for (int j = 0; j < n; j++) {
-        std::cout << arr[j] << " ";
-    }
+//    for (int j = 0; j < len; j++) {
+//        std::cout << total[j] << " ";
+//    }
+//    std::cout << "\n";
     
     return 0;
 }
