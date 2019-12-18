@@ -51,15 +51,15 @@ size_t Probing(size_t from, size_t iter, size_t size){
 
 
 class HashTable {
-    struct HashTableNode {
-        std::string key;
-        
-        HashTableNode(std::string key_) : key(std::move(key_)) {}
-    };
+//    struct HashTableNode {
+//        std::string key;
+//
+//        HashTableNode(std::string key_) : key(std::move(key_)) {}
+//    };
     
     size_t size = 0;
     size_t count_elems = 0;
-    std::vector<HashTableNode*> table;
+    std::vector<std::string> table;
     
     // it is flag for SEARCH
     std::vector<bool> deleted;
@@ -82,31 +82,32 @@ public:
 };
 
 HashTable::HashTable(size_t initial_size) : size(initial_size) {
-    table = std::vector<HashTableNode*>(initial_size);
+    table = std::vector<std::string>(initial_size, "");
     deleted = std::vector<bool>(initial_size);
     
 }
 
 HashTable::~HashTable() {
-    for (auto elem : table) {
-        if (elem) {
-            delete elem;
-        }
-    }
+    table.clear();
+//    for (auto elem : table) {
+//        if (elem) {
+//            delete elem;
+//        }
+//    }
 }
 
 void HashTable::Rehash(size_t new_size){
-    std::vector<HashTableNode*> last_table = table;
-    std::fill(table.begin(), table.end(), nullptr);
-    table.resize(new_size, nullptr);
+    std::vector<std::string> last_table = table;
+    std::fill(table.begin(), table.end(), "");
+    table.resize(new_size, "");
     
     for (size_t i = 0; i < size; i++){
-        if (last_table[i]) {
-            size_t hash = Hash(last_table[i]->key, new_size);
+        if (last_table[i] != "") {
+            size_t hash = Hash(last_table[i], new_size);
             size_t j = 0;
             
             // if place it taken go to the next
-            while ((table[hash])){
+            while ((table[hash] != "")){
                 hash = Probing(hash, j++, new_size);
             }
             table[hash] = last_table[i];
@@ -128,23 +129,23 @@ bool HashTable::Has(const std::string& key, size_t& pos) const {
     size_t i = 0;
     
     // go to the next position
-    while ((((table[hash]) &&
-             (table[hash]->key != key)) ||
-            ((!table[hash] &&
+    while ((((table[hash] != "") &&
+             (table[hash] != key)) ||
+            ((table[hash] == "" &&
               (deleted)[hash])))
            && i < size){
         
         hash = Probing(hash, i++, size);
         
         // should remember first empty position to insert element
-        if (!table[hash] && !was){
+        if (table[hash] == "" && !was){
             pos = hash;
             was = true;
         }
     }
     
     // check if last iteration was good
-    if (!table[hash] || ((i >= size) && (table[hash]->key != key))) {
+    if (table[hash] == "" || ((i >= size) && (table[hash] != key))) {
         if (!was) pos = hash;
         return false;
     }
@@ -154,8 +155,8 @@ bool HashTable::Has(const std::string& key, size_t& pos) const {
 
 void HashTable::Print() const{
     for (auto elem: table){
-        if (elem){
-            std::cout << elem->key << " ";
+        if (elem != ""){
+            std::cout << elem << " ";
         }
         else{
             std::cout << "0 ";
@@ -175,8 +176,8 @@ bool HashTable::Add(const std::string& key) {
     }
     
     // insert to the table
-    if (!table[pos]) {
-        table[pos] = new HashTableNode(key);
+    if (table[pos] == "") {
+        table[pos] = key;
         count_elems++;
         
         if (1.0 * count_elems / size > 0.75){
@@ -195,9 +196,9 @@ bool HashTable::Remove(const std::string& key) {
     size_t i = 0;
     
     // go to the next position
-    while ((((table[hash]) &&
-             (table[hash]->key != key)) ||
-            ((!table[hash] &&
+    while ((((table[hash] != "") &&
+             (table[hash] != key)) ||
+            ((table[hash] == "" &&
               deleted[hash]))) &&
            i < size){
         
@@ -206,13 +207,13 @@ bool HashTable::Remove(const std::string& key) {
     }
     
     // check if last iteration was good
-    if ( !table[hash] || ((i >= size) && (table[hash]->key != key))) {
+    if ( table[hash] == "" || ((i >= size) && (table[hash] != key))) {
         return false;
     }
     
     // delete element from table
-    delete table[hash];
-    table[hash] = nullptr;
+//    delete table[hash];
+    table[hash] = "";
     deleted[hash] = true;
     count_elems--;
     
@@ -236,11 +237,11 @@ int main() {
                 break;
             case '+':
                 std::cout << (table.Add(value) ? "OK" : "FAIL") << std::endl;
-                //                table.Print();
+                                table.Print();
                 break;
             case '-':
                 std::cout << (table.Remove(value) ? "OK" : "FAIL") << std::endl;
-                //                table.Print();
+                                table.Print();
                 break;
         }
     }
